@@ -115,6 +115,23 @@
     width:100%; padding:9px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.15);
     background:var(--input-bg); color:var(--text); font-size:0.92rem;
   }
+  /* Listes déroulantes : forcer un contraste lisible (sinon blanc sur blanc) */
+  select { -webkit-appearance:none; appearance:none; background-image:linear-gradient(45deg,transparent 50%,var(--darkgreen) 50%),linear-gradient(135deg,var(--darkgreen) 50%,transparent 50%); background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:34px; }
+  select option { background-color:#ffffff; color:#2a2a2a; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) select option { background-color:#25231d; color:#ececec; }
+  }
+  :root[data-theme="dark"] select option { background-color:#25231d; color:#ececec; }
+
+  /* Fenêtre du règlement du mur */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
+  .modal[hidden] { display:none; }
+  .modal-box { background:var(--cream); color:var(--text); border-radius:14px; width:100%; max-width:760px; height:90vh; display:flex; flex-direction:column; padding:14px; }
+  .modal-head { font-weight:700; color:var(--darkgreen); margin-bottom:10px; text-align:center; }
+  .modal-box iframe { flex:1; width:100%; border:1px solid rgba(0,0,0,0.2); border-radius:8px; background:#fff; }
+  .modal-fallback { font-size:0.8rem; opacity:0.8; margin:8px 0 0; text-align:center; }
+  .modal-actions { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:12px; }
+
   .radio-row, .check-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; }
   .radio-row label, .check-row label { display:flex; align-items:center; gap:6px; font-weight:500; margin:0; font-size:0.9rem; }
   .choice-row { display:flex; gap:12px; margin-top:6px; }
@@ -201,8 +218,6 @@
       <input type="text" name="prenom" required>
       <label>NOM DE NAISSANCE</label>
       <input type="text" name="nom_naissance">
-      <label>LIEU (+ code postal)</label>
-      <input type="text" name="lieu_naissance">
       <label class="required">DATE DE NAISSANCE</label>
       <input type="date" name="date_naissance" required>
       <label>SEXE</label>
@@ -227,8 +242,8 @@
       </p>
       <label class="required">Adresse électronique</label>
       <input type="email" name="email" required>
-      <label class="required">et n° de téléphone portable</label>
-      <input type="tel" name="telephone_portable" required>
+      <label>Téléphone portable <span style="font-weight:400;">(seulement s'il est différent du numéro ci-dessus)</span></label>
+      <input type="tel" name="telephone_portable">
     </fieldset>
 
     <fieldset id="fieldset-formule">
@@ -323,6 +338,10 @@
         <label><input type="radio" name="image_civilite" value="Madame"> Madame</label>
         <label><input type="radio" name="image_civilite" value="Monsieur"> Monsieur</label>
       </div>
+      <label>NOM</label>
+      <input type="text" name="image_nom">
+      <label>PRÉNOM</label>
+      <input type="text" name="image_prenom">
       <p style="font-size:0.85rem; line-height:1.5;">
         autorise le club : à prendre des images sur lesquelles je pourrais (ou mon enfant) figurer, dans le cadre
         des activités organisées par le club, et à les utiliser pour sa communication interne et externe auprès
@@ -341,6 +360,10 @@
         <label><input type="radio" name="parentale_civilite" value="Madame"> Madame</label>
         <label><input type="radio" name="parentale_civilite" value="Monsieur"> Monsieur</label>
       </div>
+      <label>NOM</label>
+      <input type="text" name="parentale_nom">
+      <label>PRÉNOM</label>
+      <input type="text" name="parentale_prenom">
       <p style="font-size:0.9rem; font-weight:600; margin-bottom:4px;">autorise le club :</p>
 
       <label class="required">à prendre toute disposition utile en cas d'accident</label>
@@ -430,11 +453,11 @@
       </label>
     </fieldset>
 
-    <fieldset>
+    <fieldset id="fieldset-reglement">
       <legend class="required">Règlement du mur d'escalade</legend>
-      <a href="reglement-mur-escalade.pdf" target="_blank" rel="noopener" class="btn ghost-inline">📄 Lire le règlement du mur d'escalade</a>
+      <button type="button" class="btn ghost-inline" id="ouvrir-reglement">📄 Lire le règlement du mur d'escalade</button>
       <label class="check-row" style="margin-top:14px;">
-        <input type="checkbox" name="attestation_reglement" value="oui" required>
+        <input type="checkbox" name="attestation_reglement" id="chk-reglement" value="oui" required>
         J'atteste avoir lu le règlement d'utilisation du mur d'escalade et en accepter les termes
       </label>
       <label class="required">Date</label>
@@ -448,7 +471,21 @@
     </div>
     <div id="status"></div>
   </form>
-    <div id="status"></div>
+  </div>
+
+  <div class="modal" id="modal-reglement" hidden>
+    <div class="modal-box">
+      <div class="modal-head">Règlement du mur d'escalade</div>
+      <iframe id="reglement-frame" title="Règlement du mur d'escalade"></iframe>
+      <p class="modal-fallback">
+        Le document ne s'affiche pas ?
+        <a href="reglement-mur-escalade.pdf" target="_blank" rel="noopener">Ouvrez-le dans un nouvel onglet</a>
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn ghost-inline" id="reglement-fermer">Fermer</button>
+        <button type="button" class="btn" id="reglement-valider">✓ J'ai lu et j'accepte</button>
+      </div>
+    </div>
   </div>
 
   <div class="tip">
@@ -507,6 +544,38 @@ function showScreen(id) {
     document.querySelectorAll('#section-mineur input[type=radio]').forEach(function(r){ r.required = (p === 'Enfant'); });
   }
 
+  // --- Règlement du mur : lecture dans le site, sans quitter le formulaire ---
+  const modalReglement = document.getElementById('modal-reglement');
+  const reglementFrame = document.getElementById('reglement-frame');
+  const chkReglement = document.getElementById('chk-reglement');
+
+  function ouvrirReglement() {
+    if (!reglementFrame.getAttribute('src')) {
+      reglementFrame.setAttribute('src', 'reglement-mur-escalade.pdf');
+    }
+    modalReglement.hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
+  function fermerReglement() {
+    modalReglement.hidden = true;
+    document.body.style.overflow = '';
+    document.getElementById('fieldset-reglement').scrollIntoView({ block: 'center' });
+  }
+
+  document.getElementById('ouvrir-reglement').addEventListener('click', ouvrirReglement);
+  document.getElementById('reglement-fermer').addEventListener('click', fermerReglement);
+  document.getElementById('reglement-valider').addEventListener('click', function () {
+    chkReglement.checked = true;
+    fermerReglement();
+  });
+  modalReglement.addEventListener('click', function (e) {
+    if (e.target === modalReglement) fermerReglement();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && !modalReglement.hidden) fermerReglement();
+  });
+
   function fileToBase64(file) {
     return new Promise(function(resolve, reject) {
       const reader = new FileReader();
@@ -525,6 +594,12 @@ function showScreen(id) {
       statusEl.textContent = "Merci d'indiquer si le licencié est adulte ou enfant.";
       statusEl.className = 'error';
       window.scrollTo(0,0);
+      return;
+    }
+
+    if (!WEBAPP_URL || WEBAPP_URL.indexOf('PLACEHOLDER') !== -1) {
+      statusEl.className = 'error';
+      statusEl.textContent = "L'envoi en ligne n'est pas encore activé. Merci de contacter le club à villefranchepyrenees@gmail.com.";
       return;
     }
 

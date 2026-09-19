@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "vilpy-inscription-v3";
+﻿const CACHE_NAME = "vilpy-inscription-v4";
 const ASSETS = [
   "./",
   "./index.html",

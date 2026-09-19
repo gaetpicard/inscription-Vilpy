@@ -123,6 +123,21 @@
   }
   :root[data-theme="dark"] select option { background-color:#25231d; color:#ececec; }
 
+  /* Exemplaire récapitulatif de l'inscription */
+  #recap { background:var(--card-bg); border-radius:14px; padding:18px; margin-top:18px; }
+  #recap h2 { font-size:1.05rem; color:var(--darkgreen); margin:0 0 4px; text-align:center; }
+  .recap-intro { font-size:0.82rem; opacity:0.8; text-align:center; margin:0 0 14px; }
+  .recap-section { margin-bottom:14px; }
+  .recap-section h3 { font-size:0.9rem; color:var(--darkgreen); margin:0 0 6px; border-bottom:1px solid rgba(0,0,0,0.15); padding-bottom:3px; }
+  .recap-ligne { display:flex; justify-content:space-between; gap:14px; font-size:0.85rem; padding:3px 0; }
+  .recap-ligne .val { font-weight:600; text-align:right; }
+  @media print {
+    body { display:block; background:#fff; color:#000; padding:0; }
+    .no-print, header p.sub, .back-link, form, .tip, footer, .modal { display:none !important; }
+    #recap { background:#fff; color:#000; padding:0; }
+    .recap-section h3 { color:#000; }
+  }
+
   /* Fenêtre du règlement du mur */
   .modal { position:fixed; inset:0; background:rgba(0,0,0,0.6); display:flex; align-items:center; justify-content:center; padding:16px; z-index:50; }
   .modal[hidden] { display:none; }
@@ -471,6 +486,15 @@
     </div>
     <div id="status"></div>
   </form>
+
+    <div id="recap" hidden>
+      <h2>Votre exemplaire — Inscription 2026 / 2027</h2>
+      <p class="recap-intro" id="recap-intro"></p>
+      <div id="recap-contenu"></div>
+      <div class="modal-actions no-print">
+        <button type="button" class="btn" id="imprimer-recap">🖨️ Imprimer / Enregistrer en PDF</button>
+      </div>
+    </div>
   </div>
 
   <div class="modal" id="modal-reglement" hidden>
@@ -576,6 +600,113 @@ function showScreen(id) {
     if (e.key === 'Escape' && !modalReglement.hidden) fermerReglement();
   });
 
+  // --- Exemplaire récapitulatif pour l'adhérent ---
+  const LIBELLES_SECOURS = { total_a_regler: "Total à régler" };
+
+  function libellePour(el, nom) {
+    const conteneur = el.closest('.radio-row, .check-row');
+    if (conteneur) {
+      const prec = conteneur.previousElementSibling;
+      if (prec && prec.tagName === 'LABEL') return prec.textContent.trim();
+    }
+    if (el.type === 'checkbox' || el.type === 'radio') {
+      const labelParent = el.closest('label');
+      if (labelParent) return labelParent.textContent.trim();
+    }
+    const prec = el.previousElementSibling;
+    if (prec && prec.tagName === 'LABEL') return prec.textContent.trim();
+    return LIBELLES_SECOURS[nom] || nom;
+  }
+
+  function valeurDe(els) {
+    const premier = els[0];
+    if (premier.type === 'radio') {
+      const coche = Array.prototype.find.call(els, function (e) { return e.checked; });
+      if (!coche) return '';
+      const l = coche.closest('label');
+      return l ? l.textContent.trim() : coche.value;
+    }
+    if (premier.type === 'checkbox') return premier.checked ? 'Oui' : '';
+    if (premier.tagName === 'SELECT') {
+      return premier.selectedIndex > 0 ? premier.options[premier.selectedIndex].textContent.trim() : '';
+    }
+    return (premier.value || '').trim();
+  }
+
+  function construireRecap(form, envoye) {
+    const contenu = document.getElementById('recap-contenu');
+    contenu.innerHTML = '';
+
+    function ajouterSection(titre, lignes) {
+      if (!lignes.length) return;
+      const sec = document.createElement('div');
+      sec.className = 'recap-section';
+      const h = document.createElement('h3');
+      h.textContent = titre;
+      sec.appendChild(h);
+      lignes.forEach(function (paire) {
+        const ligne = document.createElement('div');
+        ligne.className = 'recap-ligne';
+        const g = document.createElement('span');
+        g.textContent = paire[0];
+        const d = document.createElement('span');
+        d.className = 'val';
+        d.textContent = paire[1];
+        ligne.appendChild(g);
+        ligne.appendChild(d);
+        sec.appendChild(ligne);
+      });
+      contenu.appendChild(sec);
+    }
+
+    ajouterSection('Inscription', [
+      ['Date de la demande', new Date().toLocaleDateString('fr-FR')],
+      ['Le licencié est', profil === 'Enfant' ? 'Enfant / Mineur' : 'Adulte']
+    ]);
+
+    form.querySelectorAll('fieldset').forEach(function (fs) {
+      if (fs.id === 'section-mineur' && profil !== 'Enfant') return;
+      const legend = fs.querySelector('legend');
+      const titre = legend ? legend.textContent.replace('*', '').trim() : '';
+      const noms = [];
+      fs.querySelectorAll('[name]').forEach(function (el) {
+        if (noms.indexOf(el.name) === -1) noms.push(el.name);
+      });
+      const lignes = [];
+      noms.forEach(function (nom) {
+        const els = fs.querySelectorAll('[name="' + nom + '"]');
+        const valeur = valeurDe(els);
+        if (valeur) lignes.push([libellePour(els[0], nom), valeur]);
+      });
+      ajouterSection(titre, lignes);
+    });
+
+    // Paiement : total + coordonnées bancaires, pour faire le virement
+    ajouterSection('Paiement par virement', [
+      ['Total à régler', document.getElementById('total-hidden').value],
+      ['Bénéficiaire', 'ASSOC. VILLEFRANCHE PYRENEES'],
+      ['IBAN', 'FR7611206000230065652719680'],
+      ['BIC', 'AGRIFRPP812'],
+      ['Référence à indiquer', ((form.nom.value || '').toUpperCase() + ' ' + (form.prenom.value || '')).trim() + ' — licence 2026/2027']
+    ]);
+
+    const fichiers = document.getElementById('fichier_sante').files;
+    if (fichiers.length) {
+      const noms = [];
+      for (const f of fichiers) noms.push([f.name, '']);
+      ajouterSection('Document(s) joint(s)', noms);
+    }
+
+    document.getElementById('recap-intro').textContent = envoye
+      ? "Conservez cet exemplaire. Il reprend votre inscription et les coordonnées bancaires du club pour le virement."
+      : "Votre inscription n'a pas pu être envoyée automatiquement : imprimez ou enregistrez cet exemplaire et transmettez-le au club.";
+
+    document.getElementById('recap').hidden = false;
+    document.getElementById('recap').scrollIntoView({ block: 'start' });
+  }
+
+  document.getElementById('imprimer-recap').addEventListener('click', function () { window.print(); });
+
   function fileToBase64(file) {
     return new Promise(function(resolve, reject) {
       const reader = new FileReader();
@@ -599,7 +730,8 @@ function showScreen(id) {
 
     if (!WEBAPP_URL || WEBAPP_URL.indexOf('PLACEHOLDER') !== -1) {
       statusEl.className = 'error';
-      statusEl.textContent = "L'envoi en ligne n'est pas encore activé. Merci de contacter le club à villefranchepyrenees@gmail.com.";
+      statusEl.textContent = "L'envoi en ligne n'est pas encore activé. Imprimez votre exemplaire ci-dessous et transmettez-le au club (villefranchepyrenees@gmail.com).";
+      construireRecap(e.target, false);
       return;
     }
 
@@ -633,15 +765,17 @@ function showScreen(id) {
       });
       const data = await resp.json();
       if (data.ok) {
+        construireRecap(form, true);
         form.style.display = 'none';
         statusEl.className = 'ok';
-        statusEl.textContent = "✓ Inscription envoyée ! Vous allez recevoir une confirmation par email.";
+        statusEl.textContent = "✓ Inscription envoyée ! Vous allez recevoir une confirmation par email. Conservez l'exemplaire ci-dessous.";
       } else {
         throw new Error(data.error || 'Erreur inconnue');
       }
     } catch (err) {
       statusEl.className = 'error';
-      statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou contactez le club directement.";
+      statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou imprimez l'exemplaire ci-dessous et transmettez-le au club.";
+      construireRecap(form, false);
       submitBtn.disabled = false;
     }
   });

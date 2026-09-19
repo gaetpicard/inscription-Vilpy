@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inscription — Villefranche Pyrénées</title>
+<style>
+
+  :root {
+    --cream: #f0ebdc; --darkgreen: #16382c; --orange: #e85530; --text: #2a2a2a;
+    --card-bg: rgba(255,255,255,0.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --cream:#1c1a15; --darkgreen:#7fcf9f; --text:#ececec; --card-bg:rgba(255,255,255,0.08); }
+  }
+  :root[data-theme="dark"] { --cream:#1c1a15; --darkgreen:#7fcf9f; --text:#ececec; --card-bg:rgba(255,255,255,0.08); }
+  * { box-sizing: border-box; }
+  body {
+    margin:0; background:var(--cream); color:var(--text);
+    font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    display:flex; justify-content:center; padding:24px 16px 60px;
+  }
+  .wrap { max-width: 560px; width: 100%; }
+  header { text-align:center; margin-bottom:26px; }
+  header img { width:84px; height:auto; margin-bottom:6px; }
+  h1 { font-size:1.35rem; color:var(--darkgreen); margin:4px 0; }
+  p.sub { opacity:0.75; font-size:0.9rem; margin-top:0; }
+  .screen { display:none; }
+  .screen.active { display:block; }
+
+  /* Home: two big choices */
+  .home-choice {
+    display:flex; align-items:center; gap:16px; background:var(--card-bg);
+    border:2px solid var(--darkgreen); border-radius:14px; padding:20px;
+    margin-bottom:16px; cursor:pointer;
+  }
+  .home-choice .emoji { font-size:2rem; }
+  .home-choice .label { font-weight:700; color:var(--darkgreen); font-size:1.05rem; }
+  .home-choice .desc { font-size:0.85rem; opacity:0.75; margin-top:2px; }
+
+  .back-link {
+    display:inline-block; margin-bottom:18px; font-size:0.85rem; color:var(--darkgreen);
+    cursor:pointer; text-decoration:underline;
+  }
+
+  .stepper { display:flex; justify-content:center; gap:6px; margin-bottom:22px; }
+  .dot { width:9px; height:9px; border-radius:50%; background:rgba(0,0,0,0.18); }
+  .dot.done { background:var(--darkgreen); }
+  .dot.current { background:var(--orange); }
+
+  .step-title { text-align:center; font-size:1.1rem; font-weight:700; color:var(--darkgreen); margin-bottom:4px; }
+  .step-sub { text-align:center; font-size:0.85rem; opacity:0.75; margin-bottom:20px; }
+
+  .choice-row { display:flex; gap:12px; margin-bottom:18px; }
+  .choice-btn {
+    flex:1; padding:18px 12px; border-radius:12px; border:2px solid var(--darkgreen);
+    background:var(--card-bg); color:var(--darkgreen); font-size:1rem; font-weight:700; cursor:pointer; text-align:center;
+  }
+  .choice-btn.active { background:var(--darkgreen); color:white; }
+
+  .doc-card {
+    background:var(--card-bg); border-radius:12px; padding:18px; text-align:center; margin-bottom:18px;
+  }
+  .doc-card .title { font-weight:700; color:var(--darkgreen); margin-bottom:4px; }
+  .doc-card .desc { font-size:0.85rem; opacity:0.75; margin-bottom:14px; }
+  .keep-note {
+    display:inline-block; margin-bottom:12px; font-size:0.78rem; background:#fff3cd;
+    color:#7a5b00; padding:2px 8px; border-radius:6px;
+  }
+  .btn {
+    background:var(--darkgreen); color:white; text-decoration:none; padding:10px 18px;
+    border-radius:8px; font-size:0.92rem; font-weight:600; border:none; cursor:pointer; display:inline-block;
+  }
+  .btn.secondary { background:var(--orange); }
+  .btn.ghost { background:transparent; color:var(--darkgreen); border:2px solid var(--darkgreen); }
+  .btn.disabled { background:#999; pointer-events:none; opacity:0.6; }
+
+  .nav-row { display:flex; justify-content:space-between; margin-top:8px; }
+
+  /* Download screen */
+  .card {
+    background:var(--card-bg); border-radius:12px; padding:16px 18px; margin-top:12px;
+    display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .card-title { font-weight:600; color:var(--darkgreen); }
+  .card-desc { font-size:0.85rem; opacity:0.75; margin-top:2px; }
+
+  .tip {
+    font-size:0.82rem; background:var(--card-bg); border-radius:10px; padding:12px 16px;
+    margin-top:28px; opacity:0.85;
+  }
+  footer { text-align:center; font-size:0.75rem; opacity:0.6; margin-top:36px; }
+
+/* --- form-specific styles --- */
+
+  :root {
+    --cream:#f0ebdc; --darkgreen:#16382c; --orange:#e85530; --text:#2a2a2a;
+    --card-bg:rgba(255,255,255,0.6); --input-bg:rgba(255,255,255,0.9);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --cream:#1c1a15; --darkgreen:#7fcf9f; --text:#ececec; --card-bg:rgba(255,255,255,0.08); --input-bg:rgba(255,255,255,0.12); }
+  }
+  :root[data-theme="dark"] { --cream:#1c1a15; --darkgreen:#7fcf9f; --text:#ececec; --card-bg:rgba(255,255,255,0.08); --input-bg:rgba(255,255,255,0.12); }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--cream); color:var(--text); font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif; display:flex; justify-content:center; padding:24px 16px 80px; }
+  .wrap { max-width:560px; width:100%; }
+  header { text-align:center; margin-bottom:22px; }
+  header img { width:80px; }
+  h1 { font-size:1.3rem; color:var(--darkgreen); margin:4px 0; }
+  p.sub { opacity:0.75; font-size:0.88rem; margin-top:0; }
+  fieldset { border:none; background:var(--card-bg); border-radius:14px; padding:18px; margin-bottom:16px; }
+  legend { font-weight:700; color:var(--darkgreen); font-size:1rem; padding:0 4px; }
+  label { display:block; font-size:0.85rem; font-weight:600; margin:12px 0 4px; }
+  input[type=text], input[type=email], input[type=tel], input[type=date], select, textarea {
+    width:100%; padding:9px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.15);
+    background:var(--input-bg); color:var(--text); font-size:0.92rem;
+  }
+  .radio-row, .check-row { display:flex; gap:16px; flex-wrap:wrap; margin-top:6px; }
+  .radio-row label, .check-row label { display:flex; align-items:center; gap:6px; font-weight:500; margin:0; font-size:0.9rem; }
+  .choice-row { display:flex; gap:12px; margin-top:6px; }
+  .choice-btn { flex:1; padding:16px; border-radius:12px; border:2px solid var(--darkgreen); background:var(--input-bg); color:var(--darkgreen); font-size:0.98rem; font-weight:700; cursor:pointer; text-align:center; }
+  .choice-btn.active { background:var(--darkgreen); color:white; }
+  #section-mineur { display:none; }
+  .file-hint { font-size:0.78rem; opacity:0.7; margin-top:4px; }
+  .submit-bar { text-align:center; margin-top:20px; }
+  .btn { background:var(--darkgreen); color:white; border:none; padding:13px 28px; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .btn.ghost-inline {
+    display:inline-block; background:transparent; color:var(--darkgreen); border:2px solid var(--darkgreen);
+    padding:9px 14px; border-radius:8px; text-decoration:none; font-weight:700; font-size:0.9rem;
+  }
+  #status { text-align:center; margin-top:14px; font-size:0.9rem; min-height:1.2em; }
+  #status.error { color:#c0392b; }
+  #status.ok { color:var(--darkgreen); font-weight:700; }
+  .required:after { content:" *"; color:var(--orange); }
+  footer { text-align:center; font-size:0.75rem; opacity:0.6; margin-top:30px; }
+
+.screen { display:none; }
+.screen.active { display:block; }
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#16382c">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" href="icon-192.png">
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <img src="logo.jpg" alt="Logo Villefranche Pyrénées">
+    <h1>Inscription 2026 / 2027</h1>
+    <p class="sub">Club de montagne et escalade — Villefranche Pyrénées</p>
+  </header>
+
+  <div class="screen active" id="screen-home">
+    <div class="home-choice" onclick="showScreen('screen-form')">
+      <div class="emoji">📝</div>
+      <div>
+        <div class="label">S'enregistrer en ligne</div>
+        <div class="desc">Remplissez le formulaire d'inscription directement ici, envoi automatique inclus</div>
+      </div>
+    </div>
+    <a class="home-choice" href="https://drive.google.com/drive/u/2/folders/1bVfNCQiDPqhLbIwMpZWb1GXUNM3q_DjP" target="_blank" rel="noopener" style="text-decoration:none;">
+      <div class="emoji">📄</div>
+      <div>
+        <div class="label">Télécharger les documents PDF</div>
+        <div class="desc">Tous les fichiers d'un coup, à remplir vous-même</div>
+      </div>
+    </a>
+  </div>
+
+  <div class="tip">
+    💡 Pour remplir un PDF sur votre téléphone, utilisez de préférence <strong>Adobe Acrobat Reader</strong> (gratuit) : certains lecteurs par défaut n'affichent pas les champs à remplir.
+  </div>
+
+  
+
+  <div class="screen" id="screen-form">
+    <span class="back-link" onclick="showScreen('screen-home')">← Retour à l'accueil</span>
+    <form id="inscription-form">
+
+    <fieldset>
+      <legend class="required">Le licencié est</legend>
+      <div class="choice-row">
+        <button type="button" class="choice-btn" id="btn-adulte">🧑 Adulte</button>
+        <button type="button" class="choice-btn" id="btn-enfant">🧒 Enfant / Mineur</button>
+      </div>
+      <label class="required" style="margin-top:14px;">Nouvelle inscription ou renouvellement</label>
+      <div class="radio-row">
+        <label><input type="radio" name="inscription_type" value="Nouvelle inscription" required> Nouvelle inscription</label>
+        <label><input type="radio" name="inscription_type" value="Renouvellement"> Renouvellement</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Informations du licencié</legend>
+      <label>N° de licence <span style="font-weight:400;">(si renouvellement)</span></label>
+      <input type="text" name="numero_licence">
+      <label class="required">NOM</label>
+      <input type="text" name="nom" required>
+      <label class="required">PRÉNOM</label>
+      <input type="text" name="prenom" required>
+      <label>NOM DE NAISSANCE</label>
+      <input type="text" name="nom_naissance">
+      <label>LIEU (+ code postal)</label>
+      <input type="text" name="lieu_naissance">
+      <label class="required">DATE DE NAISSANCE</label>
+      <input type="date" name="date_naissance" required>
+      <label>SEXE</label>
+      <input type="text" name="sexe">
+      <label>NATIONALITÉ</label>
+      <input type="text" name="nationalite">
+      <label>ADRESSE</label>
+      <input type="text" name="adresse">
+      <label>CODE POSTAL</label>
+      <input type="text" name="code_postal">
+      <label>VILLE</label>
+      <input type="text" name="ville">
+      <label class="required">TÉL</label>
+      <input type="tel" name="telephone" required>
+    </fieldset>
+
+    <fieldset>
+      <legend>Accès à l'espace licencié</legend>
+      <p style="font-size:0.85rem; opacity:0.75; margin-top:0;">
+        Pour recevoir l'attestation de licence 2026-2027 et les codes de connexion à l'espace licencié,
+        fournissez obligatoirement une adresse électronique (à écrire lisiblement).
+      </p>
+      <label class="required">Adresse électronique</label>
+      <input type="email" name="email" required>
+      <label class="required">et n° de téléphone portable</label>
+      <input type="tel" name="telephone_portable" required>
+    </fieldset>
+
+    <fieldset id="fieldset-formule">
+      <legend>Formule et tarifs</legend>
+      <label class="required">Cotisation</label>
+      <select name="formule" id="sel-formule" required>
+        <option value="" data-prix="0">— Choisir —</option>
+        <option data-prix="165">Adulte pratiquant — 165 €</option>
+        <option data-prix="152.20">Adulte pratiquant, 2e licence même adresse — 152,20 €</option>
+        <option data-prix="101">Adulte non pratiquant — 101 €</option>
+        <option data-prix="152">Jeune pratiquant — 152 €</option>
+        <option data-prix="139.30">Jeune pratiquant, 2e licence même adresse — 139,30 €</option>
+        <option data-prix="101">Jeune non pratiquant — 101 €</option>
+      </select>
+
+      <label style="margin-top:16px;">Assurance renforcée (facultatif)</label>
+      <select name="option_assurance" class="calc" data-prix-source="self">
+        <option value="Aucune" data-prix="0">Aucune (garanties de base incluses)</option>
+        <option value="Base+ (+11€)" data-prix="11">Base + — 11 €</option>
+        <option value="Base++ (+18€)" data-prix="18">Base ++ — 18 €</option>
+      </select>
+
+      <label style="margin-top:16px;">Options facultatives</label>
+      <div class="check-row">
+        <label><input type="checkbox" class="calc" name="option_ski" value="oui" data-prix="5"> Ski de piste — 5 €</label>
+        <label><input type="checkbox" class="calc" name="option_vtt" value="oui" data-prix="30"> VTT — 30 €</label>
+        <label><input type="checkbox" class="calc" name="option_trail" value="oui" data-prix="10"> Trail — 10 €</label>
+        <label><input type="checkbox" class="calc" name="option_slackline" value="oui" data-prix="5"> Slackline / Highline — 5 €</label>
+      </div>
+
+      <label class="check-row" style="margin-top:14px;">
+        <input type="checkbox" class="calc" name="option_protection_juridique" value="oui" data-prix="1.70">
+        Protection Juridique « Protection Agression » — 1,70 €
+      </label>
+
+      <label style="margin-top:16px;">Indemnités journalières optionnelles (facultatif)</label>
+      <select name="option_ij" class="calc">
+        <option value="Aucune" data-prix="0">Aucune</option>
+        <option value="IJ1 (18€)" data-prix="18">IJ1 — 15€/jour — 18 € TTC</option>
+        <option value="IJ2 (30€)" data-prix="30">IJ2 — 25€/jour — 30 € TTC</option>
+        <option value="IJ3 (35€)" data-prix="35">IJ3 — 30€/jour — 35 € TTC</option>
+      </select>
+
+      <div style="margin-top:18px; padding-top:12px; border-top:1px solid rgba(0,0,0,0.15); display:flex; justify-content:space-between; align-items:center;">
+        <strong>Total à régler</strong>
+        <strong id="total-affiche" style="font-size:1.2rem; color:var(--darkgreen);">0,00 €</strong>
+      </div>
+      <input type="hidden" name="total_a_regler" id="total-hidden" value="0.00 €">
+    </fieldset>
+
+    <fieldset>
+      <legend>RIB : ASSOC.VILLEFRANCHE PYRENEES</legend>
+      <p style="font-size:0.9rem; margin:0;">
+        IBAN : FR7611206000230065652719680<br>
+        BIC : AGRIFRPP812
+      </p>
+    </fieldset>
+
+    <fieldset>
+      <legend class="required">Informations de santé</legend>
+      <p style="font-size:0.85rem; line-height:1.5; margin-top:0;">
+        Le certificat médical est obligatoire dans 3 cas de figure — autrement, l'attestation de santé suffit.<br>
+        1. J'ai répondu « oui » à au moins une question du questionnaire de santé adulte fourni par la FFME ;<br>
+        2. Je pratique en compétition le ski-alpinisme ;<br>
+        3. Je pratique en compétition l'escalade (niveau à partir des 1/2 finales Championnat de France et Coupe de France).
+      </p>
+      <div class="radio-row" style="flex-direction:column; align-items:flex-start; gap:10px;">
+        <label><input type="radio" name="situation_sante" value="J'atteste ne pas être dans l'un des trois cas de figure ci-dessus et je fournis une attestation de santé." required>
+          J'atteste ne pas être dans l'un des trois cas de figure ci-dessus et je fournis une attestation de santé.</label>
+        <label><input type="radio" name="situation_sante" value="Je suis dans l'un des trois cas de figure ci-dessus — je certifie fournir un certificat médical de non-contre-indication aux sports statutaires de la fédération, et avoir pris connaissance des précautions et restrictions éventuelles des pratiques.">
+          Je suis dans l'un des trois cas de figure ci-dessus — je certifie fournir un certificat médical de non-contre-indication aux sports statutaires de la fédération, et avoir pris connaissance des précautions et restrictions éventuelles des pratiques.</label>
+      </div>
+      <label style="margin-top:14px;">Certificat médical fourni (si concerné)</label>
+      <div class="radio-row">
+        <label><input type="radio" name="certificat_medical" value="loisir"> loisir</label>
+        <label><input type="radio" name="certificat_medical" value="compétition"> compétition</label>
+      </div>
+      <p style="font-size:0.85rem; line-height:1.5;">
+        Désormais, vous devez faire le nécessaire dans votre espace licencié pour, selon votre cas, générer l'attestation de santé ou téléverser
+        un certificat médical datant de moins d'un an. Vous serez relancé à plusieurs reprises. Sans cette étape, votre licence ne sera pas valide :
+        vous ne pourrez ni l'imprimer, ni participer aux compétitions.
+      </p>
+      <label style="margin-top:14px;">Questionnaire de santé rempli / certificat médical</label>
+      <input type="file" id="fichier_sante" accept=".pdf,.jpg,.jpeg,.png" multiple>
+      <div class="file-hint">PDF ou photo — plusieurs fichiers possibles</div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Droit à l'image</legend>
+      <label>Je soussigné(e)</label>
+      <div class="radio-row">
+        <label><input type="radio" name="image_civilite" value="Madame"> Madame</label>
+        <label><input type="radio" name="image_civilite" value="Monsieur"> Monsieur</label>
+      </div>
+      <p style="font-size:0.85rem; line-height:1.5;">
+        autorise le club : à prendre des images sur lesquelles je pourrais (ou mon enfant) figurer, dans le cadre
+        des activités organisées par le club, et à les utiliser pour sa communication interne et externe auprès
+        de ses partenaires et des médias.
+      </p>
+      <div class="radio-row">
+        <label><input type="radio" name="droit_image" value="Oui" required> oui</label>
+        <label><input type="radio" name="droit_image" value="Non"> non</label>
+      </div>
+    </fieldset>
+
+    <fieldset id="section-mineur">
+      <legend>Autorisation parentale pour les mineurs</legend>
+      <label>Je soussigné(e)</label>
+      <div class="radio-row">
+        <label><input type="radio" name="parentale_civilite" value="Madame"> Madame</label>
+        <label><input type="radio" name="parentale_civilite" value="Monsieur"> Monsieur</label>
+      </div>
+      <p style="font-size:0.9rem; font-weight:600; margin-bottom:4px;">autorise le club :</p>
+
+      <label class="required">à prendre toute disposition utile en cas d'accident</label>
+      <div class="radio-row">
+        <label><input type="radio" name="autorisation_accident" value="Oui"> oui</label>
+        <label><input type="radio" name="autorisation_accident" value="Non"> non</label>
+      </div>
+      <label class="required">à participer aux différentes activités du club (escalade, rando, canyon, spéléo...)</label>
+      <div class="radio-row">
+        <label><input type="radio" name="autorisation_participation" value="Oui"> oui</label>
+        <label><input type="radio" name="autorisation_participation" value="Non"> non</label>
+      </div>
+      <label class="required">à être transporté(e) dans les véhicules des adultes responsables de l'association et/ou d'autres parents participant à l'activité</label>
+      <div class="radio-row">
+        <label><input type="radio" name="autorisation_transport" value="Oui"> oui</label>
+        <label><input type="radio" name="autorisation_transport" value="Non"> non</label>
+      </div>
+      <p style="font-size:0.85rem; line-height:1.5;">
+        à faire partie (parent ou enfant) d'un groupe whatsapp afin de recevoir les informations de l'école
+        d'escalade, moyen de communication privilégié par les encadrants.
+      </p>
+      <label class="check-row">
+        <input type="checkbox" name="certifie_dispositions" value="oui">
+        Je certifie avoir pris connaissance des dispositions ci-dessus.
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Newsletters FFME</legend>
+      <label>Recevoir gratuitement la newsletter <em>Direct'Infos</em></label>
+      <div class="radio-row">
+        <label><input type="radio" name="newsletter" value="oui"> oui</label>
+        <label><input type="radio" name="newsletter" value="non"> non</label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Pass'Sport</legend>
+      <label>Numéro du Pass'Sport (si applicable)</label>
+      <input type="text" name="numero_pass_sport">
+    </fieldset>
+
+    <fieldset>
+      <legend>Tee-shirt</legend>
+      <label>Le club offre un tee-shirt aux enfants (sans flocage). Taille pour la commande</label>
+      <input type="text" name="taille_teeshirt">
+    </fieldset>
+
+    <fieldset>
+      <legend>Contacts d'urgence</legend>
+
+      <label class="required">Contact 1</label>
+      <input type="text" name="contact1_nom" required>
+      <label>Lien</label>
+      <input type="text" name="contact1_lien">
+      <label class="required">Tél</label>
+      <input type="tel" name="contact1_telephone" required>
+
+      <label style="margin-top:16px;">Contact 2</label>
+      <input type="text" name="contact2_nom">
+      <label>Lien</label>
+      <input type="text" name="contact2_lien">
+      <label>Tél</label>
+      <input type="tel" name="contact2_telephone">
+
+      <label style="margin-top:16px;">Contact 3</label>
+      <input type="text" name="contact3_nom">
+      <label>Lien</label>
+      <input type="text" name="contact3_lien">
+      <label>Tél</label>
+      <input type="tel" name="contact3_telephone">
+    </fieldset>
+
+    <fieldset>
+      <legend>Vos données personnelles</legend>
+      <p style="font-size:0.85rem; line-height:1.5; margin:6px 0 0;">
+        Les informations de ce formulaire sont utilisées par le club Villefranche Pyrénées uniquement pour
+        traiter votre inscription et vos garanties d'assurance FFME. Elles sont conservées pendant la durée
+        de votre adhésion, augmentée de 3 ans à des fins comptables et d'archivage associatif, puis supprimées.
+        Elles ne sont transmises qu'à la FFME et à l'assureur du club lorsque nécessaire. Conformément au RGPD,
+        vous pouvez demander l'accès, la rectification ou la suppression de vos données à
+        <a href="mailto:villefranchepyrenees@gmail.com">villefranchepyrenees@gmail.com</a>.
+      </p>
+      <label class="check-row" style="margin-top:12px;">
+        <input type="checkbox" name="consentement_donnees" value="oui" required>
+        J'ai pris connaissance de cette information et j'y consens
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend class="required">Règlement du mur d'escalade</legend>
+      <a href="reglement-mur-escalade.pdf" target="_blank" rel="noopener" class="btn ghost-inline">📄 Lire le règlement du mur d'escalade</a>
+      <label class="check-row" style="margin-top:14px;">
+        <input type="checkbox" name="attestation_reglement" value="oui" required>
+        J'atteste avoir lu le règlement d'utilisation du mur d'escalade et en accepter les termes
+      </label>
+      <label class="required">Date</label>
+      <input type="date" name="date_reglement" required>
+      <label class="required">Nom</label>
+      <input type="text" name="signature_nom" required>
+    </fieldset>
+
+    <div class="submit-bar">
+      <button type="submit" class="btn" id="submit-btn">Envoyer mon inscription</button>
+    </div>
+    <div id="status"></div>
+  </form>
+    <div id="status"></div>
+  </div>
+
+  <div class="tip">
+    💡 Pour remplir un PDF sur votre téléphone, utilisez de préférence <strong>Adobe Acrobat Reader</strong> (gratuit) : certains lecteurs par défaut n'affichent pas les champs à remplir.
+  </div>
+
+  <footer>Villefranche Pyrénées — club de montagne et escalade</footer>
+</div>
+
+<script>
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+
+  const WEBAPP_URL = "WEBAPP_URL_PLACEHOLDER";
+
+  const btnAdulte = document.getElementById('btn-adulte');
+  const btnEnfant = document.getElementById('btn-enfant');
+  const sectionMineur = document.getElementById('section-mineur');
+  let profil = null;
+
+  btnAdulte.addEventListener('click', function(){ setProfil('Adulte'); });
+  btnEnfant.addEventListener('click', function(){ setProfil('Enfant'); });
+
+  function recalculerTotal() {
+    let total = 0;
+    const selFormule = document.getElementById('sel-formule');
+    const optFormule = selFormule.options[selFormule.selectedIndex];
+    total += parseFloat(optFormule.getAttribute('data-prix') || '0');
+
+    document.querySelectorAll('.calc').forEach(function (el) {
+      if (el.tagName === 'SELECT') {
+        const opt = el.options[el.selectedIndex];
+        total += parseFloat(opt.getAttribute('data-prix') || '0');
+      } else if (el.type === 'checkbox' && el.checked) {
+        total += parseFloat(el.getAttribute('data-prix') || '0');
+      }
+    });
+
+    const totalStr = total.toFixed(2).replace('.', ',') + ' €';
+    document.getElementById('total-affiche').textContent = totalStr;
+    document.getElementById('total-hidden').value = totalStr;
+  }
+
+  document.getElementById('fieldset-formule').addEventListener('change', recalculerTotal);
+  recalculerTotal();
+
+  function setProfil(p) {
+    profil = p;
+    btnAdulte.classList.toggle('active', p === 'Adulte');
+    btnEnfant.classList.toggle('active', p === 'Enfant');
+    sectionMineur.style.display = (p === 'Enfant') ? 'block' : 'none';
+    document.querySelectorAll('#section-mineur input[type=radio]').forEach(function(r){ r.required = (p === 'Enfant'); });
+  }
+
+  function fileToBase64(file) {
+    return new Promise(function(resolve, reject) {
+      const reader = new FileReader();
+      reader.onload = function() { resolve(reader.result.split(',')[1]); };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('inscription-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const statusEl = document.getElementById('status');
+    const submitBtn = document.getElementById('submit-btn');
+
+    if (!profil) {
+      statusEl.textContent = "Merci d'indiquer si le licencié est adulte ou enfant.";
+      statusEl.className = 'error';
+      window.scrollTo(0,0);
+      return;
+    }
+
+    submitBtn.disabled = true;
+    statusEl.className = '';
+    statusEl.textContent = "Envoi en cours...";
+
+    const form = e.target;
+    const champs = { profil: profil };
+    new FormData(form).forEach(function(value, key) { champs[key] = value; });
+
+    const fileInput = document.getElementById('fichier_sante');
+    const fichiers = [];
+    try {
+      for (const file of fileInput.files) {
+        const base64 = await fileToBase64(file);
+        fichiers.push({ name: file.name, mimeType: file.type || 'application/octet-stream', base64: base64 });
+      }
+    } catch (err) {
+      statusEl.textContent = "Erreur de lecture d'un fichier joint.";
+      statusEl.className = 'error';
+      submitBtn.disabled = false;
+      return;
+    }
+
+    try {
+      const resp = await fetch(WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ champs: champs, fichiers: fichiers })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        form.style.display = 'none';
+        statusEl.className = 'ok';
+        statusEl.textContent = "✓ Inscription envoyée ! Vous allez recevoir une confirmation par email.";
+      } else {
+        throw new Error(data.error || 'Erreur inconnue');
+      }
+    } catch (err) {
+      statusEl.className = 'error';
+      statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou contactez le club directement.";
+      submitBtn.disabled = false;
+    }
+  });
+
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('service-worker.js').catch(function(){});
+  });
+}
+</script>
+</body>
+</html>

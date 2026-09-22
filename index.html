@@ -486,15 +486,23 @@
   </form>
 
     <div id="recap" hidden>
-      <h2>Votre exemplaire — Inscription 2026 / 2027</h2>
+      <h2 id="recap-titre">Vérifiez votre inscription</h2>
       <p class="recap-intro" id="recap-intro"></p>
       <div id="recap-contenu"></div>
-      <div class="modal-actions no-print">
-        <button type="button" class="btn" id="imprimer-recap">🖨️ Imprimer / Enregistrer en PDF</button>
+
+      <div class="modal-actions no-print" id="recap-actions-verif">
+        <button type="button" class="btn ghost-inline" id="recap-corriger">← Corriger mes informations</button>
+        <button type="button" class="btn" id="recap-envoyer">✓ Tout est exact — envoyer mon inscription</button>
       </div>
-      <p class="recap-intro no-print" id="recap-fin" style="margin-top:18px;"></p>
-      <div class="modal-actions no-print">
-        <button type="button" class="btn ghost-inline" id="terminer-recap">✓ J'ai bien reçu mon exemplaire — retour à l'accueil</button>
+
+      <div id="recap-actions-fin" hidden>
+        <div class="modal-actions no-print">
+          <button type="button" class="btn" id="imprimer-recap">🖨️ Imprimer / Enregistrer en PDF</button>
+        </div>
+        <p class="recap-intro no-print" id="recap-fin" style="margin-top:18px;"></p>
+        <div class="modal-actions no-print">
+          <button type="button" class="btn ghost-inline" id="terminer-recap">✓ J'ai bien reçu mon exemplaire — retour à l'accueil</button>
+        </div>
       </div>
     </div>
   </div>
@@ -599,9 +607,36 @@ function showScreen(id) {
   });
 
   // --- Exemplaire récapitulatif pour l'adhérent ---
-  const LIBELLES_SECOURS = { total_a_regler: "Total à régler" };
+  // Intitulés imposés : sans eux, un groupe de boutons radio prendrait pour titre
+  // le texte de sa PREMIÈRE option, ce qui laisse croire qu'elle est cochée.
+  const LIBELLES = {
+    total_a_regler: "Total à régler",
+    situation_sante: "Situation de santé déclarée",
+    certificat_medical: "Type de certificat médical",
+    image_civilite: "Civilité",
+    image_nom: "Nom", image_prenom: "Prénom",
+    parentale_civilite: "Civilité",
+    parentale_nom: "Nom", parentale_prenom: "Prénom",
+    droit_image: "Autorise l'utilisation de l'image",
+    attestation_reglement: "Règlement du mur d'escalade",
+    consentement_donnees: "Consentement RGPD",
+    certifie_dispositions: "Dispositions ci-dessus",
+    newsletter: "Newsletter Direct'Infos"
+  };
+
+  // Réponses longues résumées en une ligne lisible
+  const VALEURS_COURTES = {
+    situation_sante: {
+      "J'atteste": "Attestation de santé — remplie et conservée par l'adhérent",
+      "Je suis dans": "Certificat médical fourni"
+    },
+    attestation_reglement: { "": "Lu et accepté" },
+    consentement_donnees: { "": "Accordé" },
+    certifie_dispositions: { "": "Certifié" }
+  };
 
   function libellePour(el, nom) {
+    if (LIBELLES[nom]) return LIBELLES[nom];
     const conteneur = el.closest('.radio-row, .check-row');
     if (conteneur) {
       const prec = conteneur.previousElementSibling;
@@ -613,25 +648,34 @@ function showScreen(id) {
     }
     const prec = el.previousElementSibling;
     if (prec && prec.tagName === 'LABEL') return prec.textContent.trim();
-    return LIBELLES_SECOURS[nom] || nom;
+    return nom;
   }
 
-  function valeurDe(els) {
+  function raccourcir(nom, texte) {
+    const table = VALEURS_COURTES[nom];
+    if (!table) return texte;
+    if (table[''] !== undefined) return table[''];
+    const cle = Object.keys(table).find(function (debut) { return texte.indexOf(debut) === 0; });
+    return cle ? table[cle] : texte;
+  }
+
+  function valeurDe(els, nom) {
     const premier = els[0];
     if (premier.type === 'radio') {
       const coche = Array.prototype.find.call(els, function (e) { return e.checked; });
       if (!coche) return '';
       const l = coche.closest('label');
-      return l ? l.textContent.trim() : coche.value;
+      return raccourcir(nom, l ? l.textContent.trim() : coche.value);
     }
-    if (premier.type === 'checkbox') return premier.checked ? 'Oui' : '';
+    if (premier.type === 'checkbox') return premier.checked ? raccourcir(nom, 'Oui') : '';
     if (premier.tagName === 'SELECT') {
       return premier.selectedIndex > 0 ? premier.options[premier.selectedIndex].textContent.trim() : '';
     }
     return (premier.value || '').trim();
   }
 
-  function construireRecap(form, envoye) {
+  // etat : 'verification' (avant envoi), 'envoye' ou 'echec'
+  function construireRecap(form, etat) {
     const contenu = document.getElementById('recap-contenu');
     contenu.innerHTML = '';
 
@@ -673,7 +717,7 @@ function showScreen(id) {
       const lignes = [];
       noms.forEach(function (nom) {
         const els = fs.querySelectorAll('[name="' + nom + '"]');
-        const valeur = valeurDe(els);
+        const valeur = valeurDe(els, nom);
         if (valeur) lignes.push([libellePour(els[0], nom), valeur]);
       });
       ajouterSection(titre, lignes);
@@ -695,13 +739,28 @@ function showScreen(id) {
       ajouterSection('Document(s) joint(s)', noms);
     }
 
-    document.getElementById('recap-intro').textContent = envoye
-      ? "Conservez cet exemplaire. Il reprend votre inscription et les coordonnées bancaires du club pour le virement."
-      : "Votre inscription n'a pas pu être envoyée automatiquement : imprimez ou enregistrez cet exemplaire et transmettez-le au club.";
+    const titres = {
+      verification: "Vérifiez votre inscription",
+      envoye: "Votre exemplaire — Inscription 2026 / 2027",
+      echec: "Votre exemplaire — Inscription 2026 / 2027"
+    };
+    const intros = {
+      verification: "Relisez attentivement : rien n'a encore été envoyé au club. Corrigez si nécessaire, puis validez ci-dessous.",
+      envoye: "Conservez cet exemplaire. Il reprend votre inscription et les coordonnées bancaires du club pour le virement.",
+      echec: "Votre inscription n'a pas pu être envoyée automatiquement : imprimez ou enregistrez cet exemplaire et transmettez-le au club."
+    };
+    const fins = {
+      envoye: "Votre inscription a bien été prise en compte et transmise au club. Vous recevrez un email de confirmation.",
+      echec: "Pensez à imprimer ou enregistrer cet exemplaire avant de quitter cette page."
+    };
 
-    document.getElementById('recap-fin').textContent = envoye
-      ? "Votre inscription a bien été prise en compte et transmise au club. Vous recevrez un email de confirmation."
-      : "Pensez à imprimer ou enregistrer cet exemplaire avant de quitter cette page.";
+    document.getElementById('recap-titre').textContent = titres[etat];
+    document.getElementById('recap-intro').textContent = intros[etat];
+    document.getElementById('recap-fin').textContent = fins[etat] || '';
+
+    const enVerification = (etat === 'verification');
+    document.getElementById('recap-actions-verif').hidden = !enVerification;
+    document.getElementById('recap-actions-fin').hidden = enVerification;
 
     document.getElementById('recap').hidden = false;
     document.getElementById('recap').scrollIntoView({ block: 'start' });
@@ -722,6 +781,7 @@ function showScreen(id) {
     setProfil(null);
     recalculerTotal();
     document.getElementById('submit-btn').disabled = false;
+    document.getElementById('recap-envoyer').disabled = false;
     showScreen('screen-home');
   });
 
@@ -734,10 +794,10 @@ function showScreen(id) {
     });
   }
 
-  document.getElementById('inscription-form').addEventListener('submit', async function(e) {
+  // 1re étape : « Envoyer » affiche le récapitulatif à vérifier — rien n'est transmis.
+  document.getElementById('inscription-form').addEventListener('submit', function (e) {
     e.preventDefault();
     const statusEl = document.getElementById('status');
-    const submitBtn = document.getElementById('submit-btn');
 
     if (!profil) {
       statusEl.textContent = "Merci d'indiquer si le licencié est adulte ou enfant.";
@@ -746,18 +806,39 @@ function showScreen(id) {
       return;
     }
 
+    statusEl.textContent = '';
+    statusEl.className = '';
+    construireRecap(e.target, 'verification');
+  });
+
+  // Retour au formulaire pour corriger
+  document.getElementById('recap-corriger').addEventListener('click', function () {
+    document.getElementById('recap').hidden = true;
+    document.getElementById('inscription-form').scrollIntoView({ block: 'start' });
+  });
+
+  // 2e étape : envoi réel, après validation du récapitulatif
+  document.getElementById('recap-envoyer').addEventListener('click', function () {
+    envoyerInscription(document.getElementById('inscription-form'));
+  });
+
+  async function envoyerInscription(form) {
+    const statusEl = document.getElementById('status');
+    const submitBtn = document.getElementById('submit-btn');
+    const btnEnvoyer = document.getElementById('recap-envoyer');
+
     if (!WEBAPP_URL || WEBAPP_URL.indexOf('PLACEHOLDER') !== -1) {
       statusEl.className = 'error';
       statusEl.textContent = "L'envoi en ligne n'est pas encore activé. Imprimez votre exemplaire ci-dessous et transmettez-le au club (villefranchepyrenees@gmail.com).";
-      construireRecap(e.target, false);
+      construireRecap(form, 'echec');
       return;
     }
 
     submitBtn.disabled = true;
+    btnEnvoyer.disabled = true;
     statusEl.className = '';
     statusEl.textContent = "Envoi en cours...";
 
-    const form = e.target;
     const champs = { profil: profil };
     new FormData(form).forEach(function(value, key) { champs[key] = value; });
 
@@ -772,6 +853,7 @@ function showScreen(id) {
       statusEl.textContent = "Erreur de lecture d'un fichier joint.";
       statusEl.className = 'error';
       submitBtn.disabled = false;
+      btnEnvoyer.disabled = false;
       return;
     }
 
@@ -783,7 +865,7 @@ function showScreen(id) {
       });
       const data = await resp.json();
       if (data.ok) {
-        construireRecap(form, true);
+        construireRecap(form, 'envoye');
         form.style.display = 'none';
         statusEl.className = 'ok';
         statusEl.textContent = "✓ Inscription envoyée ! Vous allez recevoir une confirmation par email. Conservez l'exemplaire ci-dessous.";
@@ -793,10 +875,11 @@ function showScreen(id) {
     } catch (err) {
       statusEl.className = 'error';
       statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou imprimez l'exemplaire ci-dessous et transmettez-le au club.";
-      construireRecap(form, false);
+      construireRecap(form, 'echec');
       submitBtn.disabled = false;
+      btnEnvoyer.disabled = false;
     }
-  });
+  }
 
 
 if ('serviceWorker' in navigator) {

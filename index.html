@@ -198,13 +198,11 @@
         <div class="desc">Tous les fichiers d'un coup, à remplir vous-même</div>
       </div>
     </a>
-  </div>
 
-  <div class="tip">
-    💡 Pour remplir un PDF sur votre téléphone, utilisez de préférence <strong>Adobe Acrobat Reader</strong> (gratuit) : certains lecteurs par défaut n'affichent pas les champs à remplir.
+    <div class="tip">
+      💡 Pour remplir un PDF sur votre téléphone, utilisez de préférence <strong>Adobe Acrobat Reader</strong> (gratuit) : certains lecteurs par défaut n'affichent pas les champs à remplir.
+    </div>
   </div>
-
-  
 
   <div class="screen" id="screen-form">
     <span class="back-link" onclick="showScreen('screen-home')">← Retour à l'accueil</span>
@@ -494,6 +492,10 @@
       <div class="modal-actions no-print">
         <button type="button" class="btn" id="imprimer-recap">🖨️ Imprimer / Enregistrer en PDF</button>
       </div>
+      <p class="recap-intro no-print" id="recap-fin" style="margin-top:18px;"></p>
+      <div class="modal-actions no-print">
+        <button type="button" class="btn ghost-inline" id="terminer-recap">✓ J'ai bien reçu mon exemplaire — retour à l'accueil</button>
+      </div>
     </div>
   </div>
 
@@ -510,10 +512,6 @@
         <button type="button" class="btn" id="reglement-valider">✓ J'ai lu et j'accepte</button>
       </div>
     </div>
-  </div>
-
-  <div class="tip">
-    💡 Pour remplir un PDF sur votre téléphone, utilisez de préférence <strong>Adobe Acrobat Reader</strong> (gratuit) : certains lecteurs par défaut n'affichent pas les champs à remplir.
   </div>
 
   <footer>Villefranche Pyrénées — club de montagne et escalade</footer>
@@ -701,11 +699,31 @@ function showScreen(id) {
       ? "Conservez cet exemplaire. Il reprend votre inscription et les coordonnées bancaires du club pour le virement."
       : "Votre inscription n'a pas pu être envoyée automatiquement : imprimez ou enregistrez cet exemplaire et transmettez-le au club.";
 
+    document.getElementById('recap-fin').textContent = envoye
+      ? "Votre inscription a bien été prise en compte et transmise au club. Vous recevrez un email de confirmation."
+      : "Pensez à imprimer ou enregistrer cet exemplaire avant de quitter cette page.";
+
     document.getElementById('recap').hidden = false;
     document.getElementById('recap').scrollIntoView({ block: 'start' });
   }
 
   document.getElementById('imprimer-recap').addEventListener('click', function () { window.print(); });
+
+  // Fin du parcours : on repart d'une page vierge
+  document.getElementById('terminer-recap').addEventListener('click', function () {
+    const form = document.getElementById('inscription-form');
+    document.getElementById('recap').hidden = true;
+    document.getElementById('recap-contenu').innerHTML = '';
+    const statusEl = document.getElementById('status');
+    statusEl.textContent = '';
+    statusEl.className = '';
+    form.reset();
+    form.style.display = '';
+    setProfil(null);
+    recalculerTotal();
+    document.getElementById('submit-btn').disabled = false;
+    showScreen('screen-home');
+  });
 
   function fileToBase64(file) {
     return new Promise(function(resolve, reject) {

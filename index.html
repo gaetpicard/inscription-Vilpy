@@ -884,13 +884,18 @@ function showScreen(id) {
     return (premier.value || '').trim();
   }
 
+  // Même contenu que l'écran, réutilisé tel quel dans les mails du club
+  let recapSections = [];
+
   // etat : 'verification' (avant envoi), 'envoye' ou 'echec'
   function construireRecap(form, etat) {
     const contenu = document.getElementById('recap-contenu');
     contenu.innerHTML = '';
+    recapSections = [];
 
     function ajouterSection(titre, lignes) {
       if (!lignes.length) return;
+      recapSections.push({ titre: titre, lignes: lignes });
       const sec = document.createElement('div');
       sec.className = 'recap-section';
       const h = document.createElement('h3');
@@ -1100,10 +1105,12 @@ function showScreen(id) {
       const resp = await fetch(WEBAPP_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ champs: champs, fichiers: fichiers })
+        body: JSON.stringify({ champs: champs, fichiers: fichiers, recap: recapSections })
       });
       const data = await resp.json();
       if (data.ok) {
+        // Le brouillon n'a plus lieu d'être : le terminal est prêt pour une autre inscription
+        effacerSaisie();
         construireRecap(form, 'envoye');
         statusEl.className = 'ok no-print';
         statusEl.textContent = "✓ Inscription envoyée !";

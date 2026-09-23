@@ -184,7 +184,7 @@
   </header>
 
   <div class="screen active" id="screen-home">
-    <div class="home-choice" onclick="showScreen('screen-form')">
+    <div class="home-choice" onclick="demarrerInscription()">
       <div class="emoji">📝</div>
       <div>
         <div class="label">S'enregistrer en ligne</div>
@@ -204,17 +204,66 @@
     </div>
   </div>
 
-  <div class="screen" id="screen-form">
+  <!-- Étape 1 : qui s'inscrit -->
+  <div class="screen" id="screen-profil">
     <span class="back-link" onclick="showScreen('screen-home')">← Retour à l'accueil</span>
+    <div class="stepper"><span class="dot current"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="step-title">Qui s'inscrit ?</div>
+    <div class="step-sub">Ce choix détermine le questionnaire de santé à remplir.</div>
+    <div class="choice-row">
+      <button type="button" class="choice-btn" id="btn-adulte">🧑 Adulte</button>
+      <button type="button" class="choice-btn" id="btn-enfant">🧒 Enfant / Mineur</button>
+    </div>
+  </div>
+
+  <!-- Étape 2 : questionnaire de santé QS-Sport -->
+  <div class="screen" id="screen-qs">
+    <span class="back-link" onclick="showScreen('screen-profil')">← Changer de choix</span>
+    <div class="stepper"><span class="dot done"></span><span class="dot current"></span><span class="dot"></span></div>
+    <div class="step-title" id="qs-titre">Questionnaire de santé</div>
+    <div class="step-sub">
+      Remplissez-le, puis <strong>conservez-le</strong> : il ne doit pas être envoyé au club.
+    </div>
+
+    <div class="doc-card">
+      <div class="keep-note">📌 À garder chez vous</div>
+      <iframe id="qs-frame" title="Questionnaire de santé" style="width:100%; height:55vh; border:1px solid rgba(0,0,0,0.2); border-radius:8px; background:#fff;"></iframe>
+      <p class="modal-fallback">
+        Le document ne s'affiche pas ?
+        <a id="qs-lien" href="#" target="_blank" rel="noopener">Ouvrez-le dans un nouvel onglet</a>
+      </p>
+      <div class="modal-actions">
+        <a id="qs-telecharger" class="btn ghost-inline" href="#" target="_blank" rel="noopener">⬇️ Ouvrir / enregistrer le questionnaire</a>
+      </div>
+    </div>
+
+    <div class="tip">
+      💡 Si vous répondez <strong>OUI</strong> à au moins une question, un certificat médical sera nécessaire.
+      Vous pourrez le joindre à l'étape suivante.
+    </div>
+
+    <label class="check-row" style="margin-top:6px;">
+      <input type="checkbox" id="qs-fait">
+      J'ai rempli le questionnaire de santé et je le conserve.
+    </label>
+
+    <div class="nav-row">
+      <button type="button" class="btn ghost" onclick="showScreen('screen-profil')">← Retour</button>
+      <button type="button" class="btn" id="qs-continuer">Continuer vers la fiche →</button>
+    </div>
+  </div>
+
+  <!-- Étape 3 : fiche de renseignements -->
+  <div class="screen" id="screen-form">
+    <span class="back-link" onclick="showScreen('screen-qs')">← Retour au questionnaire de santé</span>
+    <div class="stepper"><span class="dot done"></span><span class="dot done"></span><span class="dot current"></span></div>
+    <div class="step-title">Fiche de renseignements</div>
+    <div class="step-sub" id="form-profil-rappel"></div>
     <form id="inscription-form">
 
     <fieldset>
-      <legend class="required">Le licencié est</legend>
-      <div class="choice-row">
-        <button type="button" class="choice-btn" id="btn-adulte">🧑 Adulte</button>
-        <button type="button" class="choice-btn" id="btn-enfant">🧒 Enfant / Mineur</button>
-      </div>
-      <label class="required" style="margin-top:14px;">Nouvelle inscription ou renouvellement</label>
+      <legend class="required">Type d'inscription</legend>
+      <label class="required">Nouvelle inscription ou renouvellement</label>
       <div class="radio-row">
         <label><input type="radio" name="inscription_type" value="Nouvelle inscription" required> Nouvelle inscription</label>
         <label><input type="radio" name="inscription_type" value="Renouvellement"> Renouvellement</label>
@@ -480,29 +529,45 @@
     </fieldset>
 
     <div class="submit-bar">
-      <button type="submit" class="btn" id="submit-btn">Envoyer mon inscription</button>
+      <button type="submit" class="btn" id="submit-btn">Valider la saisie</button>
     </div>
     <div id="status"></div>
   </form>
+  </div>
 
-    <div id="recap" hidden>
+  <!-- Étape 4 : récapitulatif, sur sa propre page -->
+  <div class="screen" id="screen-recap">
+    <span class="back-link no-print" id="recap-corriger">← Corriger mes informations</span>
+    <div id="recap">
       <h2 id="recap-titre">Vérifiez votre inscription</h2>
       <p class="recap-intro" id="recap-intro"></p>
       <div id="recap-contenu"></div>
 
+      <div class="modal-actions no-print">
+        <button type="button" class="btn ghost-inline" id="imprimer-recap">🖨️ Enregistrer / imprimer mon exemplaire</button>
+      </div>
+
       <div class="modal-actions no-print" id="recap-actions-verif">
-        <button type="button" class="btn ghost-inline" id="recap-corriger">← Corriger mes informations</button>
         <button type="button" class="btn" id="recap-envoyer">✓ Tout est exact — envoyer mon inscription</button>
       </div>
 
       <div id="recap-actions-fin" hidden>
-        <div class="modal-actions no-print">
-          <button type="button" class="btn" id="imprimer-recap">🖨️ Imprimer / Enregistrer en PDF</button>
-        </div>
         <p class="recap-intro no-print" id="recap-fin" style="margin-top:18px;"></p>
         <div class="modal-actions no-print">
           <button type="button" class="btn ghost-inline" id="terminer-recap">✓ J'ai bien reçu mon exemplaire — retour à l'accueil</button>
         </div>
+      </div>
+      <div id="status-recap" class="no-print"></div>
+    </div>
+  </div>
+
+  <!-- Confirmation finale -->
+  <div class="modal no-print" id="modal-confirme" hidden>
+    <div class="modal-box" style="height:auto; max-width:460px; text-align:center;">
+      <div class="modal-head" style="font-size:1.1rem;">✅ Inscription enregistrée</div>
+      <div id="confirme-texte" style="font-size:0.9rem; line-height:1.55;"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn" id="confirme-ok">Revenir à l'accueil</button>
       </div>
     </div>
   </div>
@@ -566,13 +631,108 @@ function showScreen(id) {
   document.getElementById('fieldset-formule').addEventListener('change', recalculerTotal);
   recalculerTotal();
 
+  const QS_FICHIERS = {
+    Adulte: { pdf: 'questionnaire-sante-majeur.pdf', titre: 'Questionnaire de santé — majeur' },
+    Enfant: { pdf: 'questionnaire-sante-mineur.pdf', titre: 'Questionnaire de santé — mineur' }
+  };
+
   function setProfil(p) {
     profil = p;
     btnAdulte.classList.toggle('active', p === 'Adulte');
     btnEnfant.classList.toggle('active', p === 'Enfant');
     sectionMineur.style.display = (p === 'Enfant') ? 'block' : 'none';
     document.querySelectorAll('#section-mineur input[type=radio]').forEach(function(r){ r.required = (p === 'Enfant'); });
+
+    const rappel = document.getElementById('form-profil-rappel');
+    if (rappel) rappel.textContent = p ? (p === 'Enfant' ? 'Licencié mineur' : 'Licencié adulte') : '';
+
+    if (p && QS_FICHIERS[p]) {
+      const qs = QS_FICHIERS[p];
+      document.getElementById('qs-titre').textContent = qs.titre;
+      document.getElementById('qs-frame').setAttribute('src', qs.pdf);
+      document.getElementById('qs-lien').setAttribute('href', qs.pdf);
+      document.getElementById('qs-telecharger').setAttribute('href', qs.pdf);
+    }
+    sauvegarderSaisie();
   }
+
+  // Étape 1 depuis l'accueil
+  function demarrerInscription() {
+    showScreen(profil ? 'screen-qs' : 'screen-profil');
+  }
+  window.demarrerInscription = demarrerInscription;
+
+  // Le choix du profil enchaîne directement sur le questionnaire de santé
+  btnAdulte.addEventListener('click', function () { showScreen('screen-qs'); });
+  btnEnfant.addEventListener('click', function () { showScreen('screen-qs'); });
+
+  document.getElementById('qs-continuer').addEventListener('click', function () {
+    const fait = document.getElementById('qs-fait');
+    if (!fait.checked) {
+      alert("Merci de cocher la case confirmant que vous avez rempli et conservé le questionnaire de santé.");
+      fait.scrollIntoView({ block: 'center' });
+      return;
+    }
+    sauvegarderSaisie();
+    showScreen('screen-form');
+  });
+
+  // --- Conservation de la saisie (survit à un rechargement ou une fermeture) ---
+  const CLE_SAUVEGARDE = 'vilpy-inscription-brouillon';
+
+  function sauvegarderSaisie() {
+    try {
+      const form = document.getElementById('inscription-form');
+      const donnees = { profil: profil, qsFait: document.getElementById('qs-fait').checked, champs: {} };
+      form.querySelectorAll('input, select, textarea').forEach(function (el) {
+        if (!el.name || el.type === 'file') return;
+        if (el.type === 'radio') {
+          if (el.checked) donnees.champs[el.name] = el.value;
+        } else if (el.type === 'checkbox') {
+          donnees.champs[el.name] = el.checked;
+        } else {
+          donnees.champs[el.name] = el.value;
+        }
+      });
+      localStorage.setItem(CLE_SAUVEGARDE, JSON.stringify(donnees));
+    } catch (err) { /* navigation privée, stockage plein : on continue sans filet */ }
+  }
+
+  function restaurerSaisie() {
+    let donnees;
+    try {
+      const brut = localStorage.getItem(CLE_SAUVEGARDE);
+      if (!brut) return false;
+      donnees = JSON.parse(brut);
+    } catch (err) { return false; }
+
+    const form = document.getElementById('inscription-form');
+    Object.keys(donnees.champs || {}).forEach(function (nom) {
+      const valeur = donnees.champs[nom];
+      const els = form.querySelectorAll('[name="' + nom + '"]');
+      if (!els.length) return;
+      if (els[0].type === 'radio') {
+        els.forEach(function (el) { el.checked = (el.value === valeur); });
+      } else if (els[0].type === 'checkbox') {
+        els[0].checked = !!valeur;
+      } else {
+        els[0].value = valeur;
+      }
+    });
+
+    document.getElementById('qs-fait').checked = !!donnees.qsFait;
+    if (donnees.profil) setProfil(donnees.profil);
+    recalculerTotal();
+    return true;
+  }
+
+  function effacerSaisie() {
+    try { localStorage.removeItem(CLE_SAUVEGARDE); } catch (err) { /* rien à faire */ }
+  }
+
+  document.getElementById('inscription-form').addEventListener('input', sauvegarderSaisie);
+  document.getElementById('inscription-form').addEventListener('change', sauvegarderSaisie);
+  document.getElementById('qs-fait').addEventListener('change', sauvegarderSaisie);
 
   // --- Règlement du mur : lecture dans le site, sans quitter le formulaire ---
   const modalReglement = document.getElementById('modal-reglement');
@@ -762,27 +922,36 @@ function showScreen(id) {
     document.getElementById('recap-actions-verif').hidden = !enVerification;
     document.getElementById('recap-actions-fin').hidden = enVerification;
 
-    document.getElementById('recap').hidden = false;
-    document.getElementById('recap').scrollIntoView({ block: 'start' });
+    showScreen('screen-recap');
   }
 
   document.getElementById('imprimer-recap').addEventListener('click', function () { window.print(); });
 
   // Fin du parcours : on repart d'une page vierge
-  document.getElementById('terminer-recap').addEventListener('click', function () {
+  function recommencer() {
     const form = document.getElementById('inscription-form');
-    document.getElementById('recap').hidden = true;
     document.getElementById('recap-contenu').innerHTML = '';
-    const statusEl = document.getElementById('status');
-    statusEl.textContent = '';
-    statusEl.className = '';
+    ['status', 'status-recap'].forEach(function (id) {
+      const el = document.getElementById(id);
+      el.textContent = '';
+      el.className = (id === 'status-recap') ? 'no-print' : '';
+    });
+    effacerSaisie();
     form.reset();
     form.style.display = '';
+    document.getElementById('qs-fait').checked = false;
     setProfil(null);
     recalculerTotal();
     document.getElementById('submit-btn').disabled = false;
     document.getElementById('recap-envoyer').disabled = false;
     showScreen('screen-home');
+  }
+
+  document.getElementById('terminer-recap').addEventListener('click', recommencer);
+  document.getElementById('confirme-ok').addEventListener('click', function () {
+    document.getElementById('modal-confirme').hidden = true;
+    document.body.style.overflow = '';
+    recommencer();
   });
 
   function fileToBase64(file) {
@@ -811,10 +980,9 @@ function showScreen(id) {
     construireRecap(e.target, 'verification');
   });
 
-  // Retour au formulaire pour corriger
+  // Retour au formulaire pour corriger — la saisie est intacte
   document.getElementById('recap-corriger').addEventListener('click', function () {
-    document.getElementById('recap').hidden = true;
-    document.getElementById('inscription-form').scrollIntoView({ block: 'start' });
+    showScreen('screen-form');
   });
 
   // 2e étape : envoi réel, après validation du récapitulatif
@@ -822,8 +990,29 @@ function showScreen(id) {
     envoyerInscription(document.getElementById('inscription-form'));
   });
 
+  // Confirmation finale, basée sur ce que le serveur a réellement pu faire
+  function afficherConfirmation(controle) {
+    const bloc = document.getElementById('confirme-texte');
+    const recu = controle.mailClub ? ('<strong>' + controle.mailClub + '</strong>') : 'la boîte du club';
+    const livraison = controle.mailConfirme
+      ? "Nous avons vérifié que le message est bien parti vers " + recu + "."
+      : "Le message a été transmis à " + recu + ".";
+    const enregistrement = controle.ligne
+      ? "Votre inscription est enregistrée dans le registre du club (ligne " + controle.ligne + ")."
+      : "Votre inscription est enregistrée dans le registre du club.";
+
+    bloc.innerHTML =
+      '<p style="margin:0 0 10px;">' + enregistrement + ' ' + livraison + '</p>' +
+      '<p style="margin:0 0 10px;">Vous allez recevoir un email de confirmation.</p>' +
+      '<p style="margin:0; font-weight:700;">Il ne manque plus que le règlement : ' +
+      (document.getElementById('total-hidden').value || '') + ' par virement.</p>';
+
+    document.getElementById('modal-confirme').hidden = false;
+    document.body.style.overflow = 'hidden';
+  }
+
   async function envoyerInscription(form) {
-    const statusEl = document.getElementById('status');
+    const statusEl = document.getElementById('status-recap');
     const submitBtn = document.getElementById('submit-btn');
     const btnEnvoyer = document.getElementById('recap-envoyer');
 
@@ -866,9 +1055,9 @@ function showScreen(id) {
       const data = await resp.json();
       if (data.ok) {
         construireRecap(form, 'envoye');
-        form.style.display = 'none';
-        statusEl.className = 'ok';
-        statusEl.textContent = "✓ Inscription envoyée ! Vous allez recevoir une confirmation par email. Conservez l'exemplaire ci-dessous.";
+        statusEl.className = 'ok no-print';
+        statusEl.textContent = "✓ Inscription envoyée !";
+        afficherConfirmation(data.controle || {});
       } else {
         throw new Error(data.error || 'Erreur inconnue');
       }
@@ -881,6 +1070,9 @@ function showScreen(id) {
     }
   }
 
+
+// Une saisie interrompue est rechargée telle quelle
+restaurerSaisie();
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function () {

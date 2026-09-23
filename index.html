@@ -171,7 +171,7 @@
   .choice-row { display:flex; gap:12px; margin-top:6px; }
   .choice-btn { flex:1; padding:16px; border-radius:12px; border:2px solid var(--darkgreen); background:var(--input-bg); color:var(--darkgreen); font-size:0.98rem; font-weight:700; cursor:pointer; text-align:center; }
   .choice-btn.active { background:var(--darkgreen); color:white; }
-  #section-mineur { display:none; }
+  .mineur-only { display:none; }
   .file-hint { font-size:0.78rem; opacity:0.7; margin-top:4px; }
   .submit-bar { text-align:center; margin-top:20px; }
   .btn { background:var(--darkgreen); color:white; border:none; padding:13px 28px; border-radius:10px; font-size:1rem; font-weight:700; cursor:pointer; }
@@ -441,7 +441,7 @@
       </div>
     </fieldset>
 
-    <fieldset id="section-mineur">
+    <fieldset id="section-mineur" class="mineur-only">
       <legend>Autorisation parentale pour les mineurs</legend>
       <label>Je soussigné(e)</label>
       <div class="radio-row">
@@ -469,14 +469,23 @@
         <label><input type="radio" name="autorisation_transport" value="Oui"> oui</label>
         <label><input type="radio" name="autorisation_transport" value="Non"> non</label>
       </div>
-      <p style="font-size:0.85rem; line-height:1.5;">
-        à faire partie (parent ou enfant) d'un groupe whatsapp afin de recevoir les informations de l'école
-        d'escalade, moyen de communication privilégié par les encadrants.
-      </p>
       <label class="check-row">
         <input type="checkbox" name="certifie_dispositions" value="oui">
         Je certifie avoir pris connaissance des dispositions ci-dessus.
       </label>
+    </fieldset>
+
+    <fieldset id="section-comm-ecole" class="mineur-only">
+      <legend>Communication école</legend>
+      <p style="font-size:0.85rem; line-height:1.5; margin-top:0;">
+        Les encadrants utilisent un groupe WhatsApp pour transmettre les informations de l'école
+        d'escalade (horaires, sorties, annulations) : c'est leur moyen de communication privilégié.
+      </p>
+      <label class="required">Faire partie du groupe WhatsApp de l'école d'escalade (parent ou enfant)</label>
+      <div class="radio-row">
+        <label><input type="radio" name="whatsapp_ecole" value="Oui"> oui</label>
+        <label><input type="radio" name="whatsapp_ecole" value="Non"> non</label>
+      </div>
     </fieldset>
 
     <fieldset>
@@ -639,7 +648,6 @@ function showScreen(id) {
 
   const btnAdulte = document.getElementById('btn-adulte');
   const btnEnfant = document.getElementById('btn-enfant');
-  const sectionMineur = document.getElementById('section-mineur');
   let profil = null;
 
   btnAdulte.addEventListener('click', function(){ setProfil('Adulte'); });
@@ -677,8 +685,10 @@ function showScreen(id) {
     profil = p;
     btnAdulte.classList.toggle('active', p === 'Adulte');
     btnEnfant.classList.toggle('active', p === 'Enfant');
-    sectionMineur.style.display = (p === 'Enfant') ? 'block' : 'none';
-    document.querySelectorAll('#section-mineur input[type=radio]').forEach(function(r){ r.required = (p === 'Enfant'); });
+    document.querySelectorAll('.mineur-only').forEach(function (fs) {
+      fs.style.display = (p === 'Enfant') ? 'block' : 'none';
+      fs.querySelectorAll('input[type=radio]').forEach(function (r) { r.required = (p === 'Enfant'); });
+    });
 
     const rappel = document.getElementById('form-profil-rappel');
     if (rappel) rappel.textContent = p ? (p === 'Enfant' ? 'Licencié mineur' : 'Licencié adulte') : '';
@@ -823,10 +833,14 @@ function showScreen(id) {
     total_a_regler: "Total à régler",
     situation_sante: "Situation de santé déclarée",
     certificat_medical: "Type de certificat médical",
-    droit_image: "Autorisation",
-    attestation_reglement: "Règlement du mur d'escalade",
-    consentement_donnees: "Consentement RGPD",
-    certifie_dispositions: "Dispositions ci-dessus",
+    droit_image: "Autorise la prise et l'utilisation d'images",
+    attestation_reglement: "Règlement du mur d'escalade lu et accepté",
+    consentement_donnees: "Traitement des données personnelles (RGPD)",
+    certifie_dispositions: "A pris connaissance des dispositions de l'autorisation parentale",
+    autorisation_accident: "Autorise le club à prendre toute disposition utile en cas d'accident",
+    autorisation_participation: "Autorise la participation aux activités du club",
+    autorisation_transport: "Autorise le transport en véhicule des responsables ou parents",
+    whatsapp_ecole: "Groupe WhatsApp de l'école d'escalade",
     newsletter: "Newsletter Direct'Infos"
   };
 
@@ -845,9 +859,9 @@ function showScreen(id) {
       "J'atteste": "Attestation de santé — remplie et conservée par l'adhérent",
       "Je suis dans": "Certificat médical fourni"
     },
-    attestation_reglement: { "": "Lu et accepté" },
-    consentement_donnees: { "": "Accordé" },
-    certifie_dispositions: { "": "Certifié" }
+    attestation_reglement: { "": "Oui" },
+    consentement_donnees: { "": "Consentement donné" },
+    certifie_dispositions: { "": "Oui" }
   };
 
   function libellePour(el, nom) {
@@ -927,7 +941,7 @@ function showScreen(id) {
     ]);
 
     form.querySelectorAll('fieldset').forEach(function (fs) {
-      if (fs.id === 'section-mineur' && profil !== 'Enfant') return;
+      if (fs.classList.contains('mineur-only') && profil !== 'Enfant') return;
       const legend = fs.querySelector('legend');
       const titre = legend ? legend.textContent.replace('*', '').trim() : '';
       const noms = [];

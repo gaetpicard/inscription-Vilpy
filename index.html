@@ -481,11 +481,11 @@
         Les encadrants utilisent un groupe WhatsApp pour transmettre les informations de l'école
         d'escalade (horaires, sorties, annulations) : c'est leur moyen de communication privilégié.
       </p>
-      <label class="required">Faire partie du groupe WhatsApp de l'école d'escalade (parent ou enfant)</label>
-      <div class="radio-row">
-        <label><input type="radio" name="whatsapp_ecole" value="Oui"> oui</label>
-        <label><input type="radio" name="whatsapp_ecole" value="Non"> non</label>
-      </div>
+      <label class="check-row">
+        <input type="checkbox" name="communication_ecole" id="chk-comm-ecole" value="oui">
+        J'ai pris connaissance que le groupe WhatsApp est le moyen de communication de l'école
+        d'escalade, et j'accepte d'en faire partie (parent ou enfant).
+      </label>
     </fieldset>
 
     <fieldset>
@@ -689,6 +689,8 @@ function showScreen(id) {
       fs.style.display = (p === 'Enfant') ? 'block' : 'none';
       fs.querySelectorAll('input[type=radio]').forEach(function (r) { r.required = (p === 'Enfant'); });
     });
+    // Acceptation du canal de communication : à cocher volontairement
+    document.getElementById('chk-comm-ecole').required = (p === 'Enfant');
 
     const rappel = document.getElementById('form-profil-rappel');
     if (rappel) rappel.textContent = p ? (p === 'Enfant' ? 'Licencié mineur' : 'Licencié adulte') : '';
@@ -833,14 +835,14 @@ function showScreen(id) {
     total_a_regler: "Total à régler",
     situation_sante: "Situation de santé déclarée",
     certificat_medical: "Type de certificat médical",
-    droit_image: "Autorise la prise et l'utilisation d'images",
-    attestation_reglement: "Règlement du mur d'escalade lu et accepté",
-    consentement_donnees: "Traitement des données personnelles (RGPD)",
-    certifie_dispositions: "A pris connaissance des dispositions de l'autorisation parentale",
-    autorisation_accident: "Autorise le club à prendre toute disposition utile en cas d'accident",
-    autorisation_participation: "Autorise la participation aux activités du club",
-    autorisation_transport: "Autorise le transport en véhicule des responsables ou parents",
-    whatsapp_ecole: "Groupe WhatsApp de l'école d'escalade",
+    droit_image: "Droit à l'image",
+    attestation_reglement: "Règlement du mur",
+    consentement_donnees: "RGPD",
+    certifie_dispositions: "Autorisation parentale",
+    autorisation_accident: "Accident",
+    autorisation_participation: "Activités",
+    autorisation_transport: "Transport",
+    communication_ecole: "Communication école",
     newsletter: "Newsletter Direct'Infos"
   };
 
@@ -860,8 +862,9 @@ function showScreen(id) {
       "Je suis dans": "Certificat médical fourni"
     },
     attestation_reglement: { "": "Oui" },
-    consentement_donnees: { "": "Consentement donné" },
-    certifie_dispositions: { "": "Oui" }
+    consentement_donnees: { "": "Oui" },
+    certifie_dispositions: { "": "Oui" },
+    communication_ecole: { "": "Oui" }
   };
 
   function libellePour(el, nom) {

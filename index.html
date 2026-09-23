@@ -823,16 +823,21 @@ function showScreen(id) {
     total_a_regler: "Total à régler",
     situation_sante: "Situation de santé déclarée",
     certificat_medical: "Type de certificat médical",
-    image_civilite: "Civilité",
-    image_nom: "Nom", image_prenom: "Prénom",
-    parentale_civilite: "Civilité",
-    parentale_nom: "Nom", parentale_prenom: "Prénom",
-    droit_image: "Autorise l'utilisation de l'image",
+    droit_image: "Autorisation",
     attestation_reglement: "Règlement du mur d'escalade",
     consentement_donnees: "Consentement RGPD",
     certifie_dispositions: "Dispositions ci-dessus",
     newsletter: "Newsletter Direct'Infos"
   };
+
+  // Champs de signature : ils répètent l'identité déjà connue. Saisis dans la fiche,
+  // mais inutiles dans le récapitulatif et les mails — seule la réponse compte.
+  const MASQUER_RECAP = [
+    'image_civilite', 'image_nom', 'image_prenom',
+    'parentale_civilite', 'parentale_nom', 'parentale_prenom',
+    'signature_nom', 'date_reglement',
+    'total_a_regler' // déjà présent dans la section « Paiement par virement »
+  ];
 
   // Réponses longues résumées en une ligne lisible
   const VALEURS_COURTES = {
@@ -931,6 +936,7 @@ function showScreen(id) {
       });
       const lignes = [];
       noms.forEach(function (nom) {
+        if (MASQUER_RECAP.indexOf(nom) !== -1) return;
         const els = fs.querySelectorAll('[name="' + nom + '"]');
         const valeur = valeurDe(els, nom);
         if (valeur) lignes.push([libellePour(els[0], nom), valeur]);

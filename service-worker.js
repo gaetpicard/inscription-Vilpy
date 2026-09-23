@@ -1,8 +1,9 @@
-﻿const CACHE_NAME = "vilpy-inscription-v8";
+﻿const CACHE_NAME = "vilpy-inscription-v9";
 const ASSETS = [
   "./",
   "./index.html",
   "./logo.jpg",
+  "./qr-vilpy2026.jpeg",
   "./manifest.json",
   "./reglement-mur-escalade.pdf"
 ];

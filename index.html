@@ -848,7 +848,18 @@ function showScreen(id) {
     'image_civilite', 'image_nom', 'image_prenom',
     'parentale_civilite', 'parentale_nom', 'parentale_prenom',
     'signature_nom', 'date_reglement',
-    'total_a_regler' // déjà présent dans la section « Paiement par virement »
+    'total_a_regler', // déjà présent dans la section « Paiement par virement »
+    // Options : rassemblées en une seule ligne lisible (voir OPTIONS_CASES)
+    'option_ski', 'option_vtt', 'option_trail', 'option_slackline', 'option_protection_juridique'
+  ];
+
+  // Options facultatives à déclarer à la FFME
+  const OPTIONS_CASES = [
+    ['option_ski', 'Ski de piste'],
+    ['option_vtt', 'VTT'],
+    ['option_trail', 'Trail'],
+    ['option_slackline', 'Slackline / Highline'],
+    ['option_protection_juridique', 'Protection juridique « Protection Agression »']
   ];
 
   // Réponses longues résumées en une ligne lisible
@@ -954,6 +965,16 @@ function showScreen(id) {
         const valeur = valeurDe(els, nom);
         if (valeur) lignes.push([libellePour(els[0], nom), valeur]);
       });
+
+      // Toujours afficher les options, même aucune : l'absence de ligne serait ambiguë
+      if (fs.id === 'fieldset-formule') {
+        const choisies = OPTIONS_CASES.filter(function (paire) {
+          const el = form.querySelector('[name="' + paire[0] + '"]');
+          return el && el.checked;
+        }).map(function (paire) { return paire[1]; });
+        lignes.push(['Options facultatives', choisies.length ? choisies.join(', ') : 'Aucune']);
+      }
+
       ajouterSection(titre, lignes);
     });
 

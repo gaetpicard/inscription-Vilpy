@@ -375,11 +375,28 @@
         <option value="IJ3 (35€)" data-prix="35">IJ3 — 30€/jour — 35 € TTC</option>
       </select>
 
+      <div class="mineur-only" id="bloc-passsport" style="display:none; margin-top:16px;">
+        <label for="pass-sport">Code Pass'Sport (facultatif)</label>
+        <input type="text" id="pass-sport" name="pass_sport" autocomplete="off"
+               placeholder="Code figurant sur la notification">
+        <p style="font-size:0.85rem; color:#555; margin:6px 0 0;">
+          Réservé aux mineurs éligibles. Si vous saisissez votre code, <strong>50 € sont
+          déduits</strong> du montant ci-dessous : vous ne réglez que la différence, le club
+          se fait rembourser l'aide par l'État.
+        </p>
+      </div>
+
+      <div id="ligne-passsport" hidden style="margin-top:12px; justify-content:space-between; align-items:center; color:var(--darkgreen);">
+        <span>Déduction Pass'Sport</span>
+        <strong>− 50,00 €</strong>
+      </div>
+
       <div style="margin-top:18px; padding-top:12px; border-top:1px solid rgba(0,0,0,0.15); display:flex; justify-content:space-between; align-items:center;">
         <strong>Total à régler</strong>
         <strong id="total-affiche" style="font-size:1.2rem; color:var(--darkgreen);">0,00 €</strong>
       </div>
       <input type="hidden" name="total_a_regler" id="total-hidden" value="0.00 €">
+      <input type="hidden" name="reduction_pass_sport" id="passsport-hidden" value="">
     </fieldset>
 
     <fieldset>
@@ -664,12 +681,32 @@ function showScreen(id) {
       }
     });
 
+    // Pass'Sport : aide de l'État de 50 €, réservée aux mineurs éligibles.
+    // Le club avance la déduction et se fait rembourser : la famille ne règle
+    // que la différence. On plafonne à la cotisation pour ne jamais afficher
+    // un total négatif.
+    const champPass = document.getElementById('pass-sport');
+    const codePass = (profil === 'Enfant' && champPass) ? champPass.value.trim() : '';
+    const reduction = codePass ? Math.min(50, total) : 0;
+    total -= reduction;
+
+    const lignePass = document.getElementById('ligne-passsport');
+    lignePass.hidden = (reduction === 0);
+    lignePass.style.display = reduction ? 'flex' : 'none';
+    lignePass.querySelector('strong').textContent =
+      '− ' + reduction.toFixed(2).replace('.', ',') + ' €';
+    document.getElementById('passsport-hidden').value =
+      reduction ? '− ' + reduction.toFixed(2).replace('.', ',') + ' €' : '';
+
     const totalStr = total.toFixed(2).replace('.', ',') + ' €';
     document.getElementById('total-affiche').textContent = totalStr;
     document.getElementById('total-hidden').value = totalStr;
   }
 
   document.getElementById('fieldset-formule').addEventListener('change', recalculerTotal);
+  // « change » n'arrive qu'à la sortie du champ : on suit aussi la frappe,
+  // sinon le montant ne bouge pas tant qu'on n'a pas cliqué ailleurs.
+  document.getElementById('pass-sport').addEventListener('input', recalculerTotal);
   recalculerTotal();
 
   const QS_FICHIERS = {
@@ -687,6 +724,12 @@ function showScreen(id) {
     });
     // Acceptation du canal de communication : à cocher volontairement
     document.getElementById('chk-comm-ecole').required = (p === 'Enfant');
+
+    // Le Pass'Sport ne concerne que les mineurs : repasser en adulte efface le
+    // code, sans quoi il serait envoyé et déduit à tort.
+    const champPass = document.getElementById('pass-sport');
+    if (p !== 'Enfant' && champPass) champPass.value = '';
+    recalculerTotal();
 
     const rappel = document.getElementById('form-profil-rappel');
     if (rappel) rappel.textContent = p ? (p === 'Enfant' ? 'Licencié mineur' : 'Licencié adulte') : '';

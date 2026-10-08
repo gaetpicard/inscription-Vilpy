@@ -1270,10 +1270,24 @@ function showScreen(id) {
       }
     } catch (err) {
       statusEl.className = 'error';
-      // On garde la phrase rassurante, mais on montre AUSSI la cause : sans
-      // elle, ni l'adhérent ni le club ne peuvent savoir ce qui a échoué.
-      const cause = (err && err.message) ? ' (détail : ' + err.message + ')' : '';
-      statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou imprimez l'exemplaire ci-dessous et transmettez-le au club." + cause;
+      // Un envoi bloqué par le navigateur lève un TypeError : la requête n'est
+      // même pas partie. C'est le cas avec les navigateurs à protection
+      // renforcée (Qwant, Brave) et les bloqueurs de publicité, qui refusent
+      // les requêtes vers les domaines Google — or le formulaire écrit dans
+      // un Google Apps Script. Le dire explicitement évite à la famille de
+      // croire que le club n'a pas reçu son dossier, et au club de chercher
+      // une panne qui n'existe pas.
+      if (err instanceof TypeError) {
+        statusEl.textContent = "Votre navigateur a bloqué l'envoi avant qu'il ne parte : " +
+          "certains navigateurs (Qwant, Brave) et les bloqueurs de publicité refusent " +
+          "les requêtes vers Google, que ce formulaire utilise. Réessayez avec Chrome, " +
+          "Edge ou Safari — ou imprimez l'exemplaire ci-dessous et transmettez-le au club.";
+      } else {
+        // On garde la phrase rassurante, mais on montre AUSSI la cause : sans
+        // elle, ni l'adhérent ni le club ne peuvent savoir ce qui a échoué.
+        const cause = (err && err.message) ? ' (détail : ' + err.message + ')' : '';
+        statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou imprimez l'exemplaire ci-dessous et transmettez-le au club." + cause;
+      }
       construireRecap(form, 'echec');
       submitBtn.disabled = false;
       btnEnvoyer.disabled = false;

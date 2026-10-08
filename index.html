@@ -1049,6 +1049,66 @@ function showScreen(id) {
     recommencer();
   });
 
+  // Une photo de certificat prise au téléphone pèse 5 à 8 Mo. Envoyée telle
+  // quelle, encodée en base64 (+33 %), la requête expire sur une connexion
+  // mobile : l'inscription échoue et personne ne sait pourquoi. On réduit donc
+  // l'image ici — 1600 px de côté, JPEG qualité 0,72. Un certificat reste
+  // parfaitement lisible et le fichier devient une vingtaine de fois plus léger.
+  const COTE_MAX = 1600;
+  const QUALITE_JPEG = 0.72;
+  const LIMITE_FICHIER = 4 * 1024 * 1024;
+  const LIMITE_TOTALE = 6 * 1024 * 1024;
+
+  function enMo(octets) { return (octets / 1024 / 1024).toFixed(1).replace('.', ','); }
+
+  function reduireImage(file) {
+    return new Promise(function (resolve, reject) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        const facteur = Math.min(1, COTE_MAX / Math.max(img.width, img.height));
+        const largeur = Math.round(img.width * facteur);
+        const hauteur = Math.round(img.height * facteur);
+        const canvas = document.createElement('canvas');
+        canvas.width = largeur;
+        canvas.height = hauteur;
+        canvas.getContext('2d').drawImage(img, 0, 0, largeur, hauteur);
+        canvas.toBlob(function (blob) {
+          // Si la réduction n'apporte rien (image déjà légère), on garde l'original
+          resolve(blob && blob.size < file.size ? blob : file);
+        }, 'image/jpeg', QUALITE_JPEG);
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image illisible : ' + file.name));
+      };
+      img.src = url;
+    });
+  }
+
+  async function preparerFichier(file) {
+    let aEnvoyer = file;
+    let type = file.type || 'application/octet-stream';
+    let nom = file.name;
+
+    if (type.indexOf('image/') === 0) {
+      aEnvoyer = await reduireImage(file);
+      if (aEnvoyer !== file) {
+        type = 'image/jpeg';
+        nom = nom.replace(/\.[^.]+$/, '') + '.jpg';
+      }
+    }
+
+    if (aEnvoyer.size > LIMITE_FICHIER) {
+      throw new Error('Le fichier « ' + file.name + ' » reste trop lourd (' +
+        enMo(aEnvoyer.size) + ' Mo). Réduisez-le, ou envoyez-le par courriel au club.');
+    }
+
+    const base64 = await fileToBase64(aEnvoyer);
+    return { name: nom, mimeType: type, base64: base64, octets: aEnvoyer.size };
+  }
+
   function fileToBase64(file) {
     return new Promise(function(resolve, reject) {
       const reader = new FileReader();
@@ -1130,11 +1190,18 @@ function showScreen(id) {
     const fichiers = [];
     try {
       for (const file of fileInput.files) {
-        const base64 = await fileToBase64(file);
-        fichiers.push({ name: file.name, mimeType: file.type || 'application/octet-stream', base64: base64 });
+        statusEl.textContent = 'Préparation de « ' + file.name + ' »…';
+        fichiers.push(await preparerFichier(file));
       }
+      const total = fichiers.reduce(function (somme, f) { return somme + f.octets; }, 0);
+      if (total > LIMITE_TOTALE) {
+        throw new Error('Les pièces jointes totalisent ' + enMo(total) +
+          ' Mo, c’est trop pour l’envoi. Joignez-en moins, ou envoyez-les par courriel au club.');
+      }
+      fichiers.forEach(function (f) { delete f.octets; });
+      statusEl.textContent = 'Envoi en cours...';
     } catch (err) {
-      statusEl.textContent = "Erreur de lecture d'un fichier joint.";
+      statusEl.textContent = err.message || "Erreur de lecture d'un fichier joint.";
       statusEl.className = 'error';
       submitBtn.disabled = false;
       btnEnvoyer.disabled = false;
@@ -1160,7 +1227,10 @@ function showScreen(id) {
       }
     } catch (err) {
       statusEl.className = 'error';
-      statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou imprimez l'exemplaire ci-dessous et transmettez-le au club.";
+      // On garde la phrase rassurante, mais on montre AUSSI la cause : sans
+      // elle, ni l'adhérent ni le club ne peuvent savoir ce qui a échoué.
+      const cause = (err && err.message) ? ' (détail : ' + err.message + ')' : '';
+      statusEl.textContent = "Une erreur est survenue lors de l'envoi. Réessayez, ou imprimez l'exemplaire ci-dessous et transmettez-le au club." + cause;
       construireRecap(form, 'echec');
       submitBtn.disabled = false;
       btnEnvoyer.disabled = false;
